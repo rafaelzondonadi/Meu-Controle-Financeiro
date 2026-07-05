@@ -2,4 +2,10 @@
 
 Aplicativo PWA para controle de entradas, saidas, cartoes, analise de fatura e comparativo mensal.
 
-Depois de abrir o link no celular, use a opcao `Adicionar a tela inicial` do navegador.
+## Como acessar
+
+Depois que o GitHub Pages estiver habilitado, o app ficara disponivel em:
+
+https://rafaelzondonadi.github.io/Meu-Controle-Financeiro/
+
+No celular, abra esse link no navegador e use a opcao `Adicionar a tela inicial`.
