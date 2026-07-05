@@ -1,0 +1,351 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Controle Financeiro</title>
+    <meta name="theme-color" content="#176e5c" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="Financas" />
+    <link rel="manifest" href="manifest.webmanifest" />
+    <link rel="icon" href="icon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="icon.svg" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main class="app-shell">
+      <header class="topbar">
+        <div>
+          <p class="eyebrow">Evolua Facil</p>
+          <h1>Controle financeiro pessoal</h1>
+        </div>
+        <div class="top-actions">
+          <label class="month-control">
+            <span>Mes</span>
+            <input id="monthSelect" type="month" aria-label="Selecionar mes" />
+          </label>
+          <button class="ghost-button" id="clearDataBtn" type="button" title="Limpar dados salvos">Limpar</button>
+          <input class="sr-only" id="backupFile" type="file" accept="application/json,.json" />
+          <button id="importBtn" type="button" title="Importar backup">Importar</button>
+          <button id="exportBtn" type="button" title="Exportar backup">Exportar</button>
+        </div>
+      </header>
+
+      <section class="summary-grid" aria-label="Resumo financeiro">
+        <article class="metric income">
+          <span>Entradas</span>
+          <strong id="totalIncome">R$ 0,00</strong>
+        </article>
+        <article class="metric expense">
+          <span>Gastos</span>
+          <strong id="totalExpense">R$ 0,00</strong>
+        </article>
+        <article class="metric balance">
+          <span>Saldo</span>
+          <strong id="totalBalance">R$ 0,00</strong>
+        </article>
+        <article class="metric">
+          <span>Cartoes</span>
+          <strong id="totalCards">R$ 0,00</strong>
+        </article>
+      </section>
+
+      <nav class="tabs" aria-label="Areas do aplicativo">
+        <button class="tab active" type="button" data-tab="lancamentos">Lancamentos</button>
+        <button class="tab" type="button" data-tab="cartoes">Cartoes</button>
+        <button class="tab" type="button" data-tab="analise">Analise</button>
+        <button class="tab" type="button" data-tab="comparativo">Comparativo</button>
+      </nav>
+
+      <section class="tab-panel active" id="lancamentos">
+        <div class="content-grid">
+          <form class="panel" id="expenseForm">
+            <div class="panel-title">
+              <h2>Gastos fixos e extras</h2>
+              <span class="pill">Saidas</span>
+            </div>
+            <div class="field-grid">
+              <label>
+                <span>Data</span>
+                <input name="date" type="date" required />
+              </label>
+              <label>
+                <span>Tipo</span>
+                <select name="type" required>
+                  <option value="Faculdade">Faculdade</option>
+                  <option value="Gasto fixo">Gasto fixo</option>
+                  <option value="Extra">Extra</option>
+                </select>
+              </label>
+              <label>
+                <span>Grupo</span>
+                <select name="group" required>
+                  <option>Educacao</option>
+                  <option>Moradia</option>
+                  <option>Alimentacao</option>
+                  <option>Transporte</option>
+                  <option>Saude</option>
+                  <option>Lazer</option>
+                  <option>Compras</option>
+                  <option>Outros</option>
+                </select>
+              </label>
+              <label>
+                <span>Valor</span>
+                <input name="amount" type="number" min="0.01" step="0.01" placeholder="0,00" required />
+              </label>
+            </div>
+            <label>
+              <span>Descricao</span>
+              <input name="description" placeholder="Mensalidade, aluguel, mercado, consulta..." required />
+            </label>
+            <button type="submit">Adicionar gasto</button>
+          </form>
+
+          <form class="panel" id="incomeForm">
+            <div class="panel-title">
+              <h2>Lancamentos de entradas</h2>
+              <span class="pill positive">Entradas</span>
+            </div>
+            <div class="field-grid">
+              <label>
+                <span>Data</span>
+                <input name="date" type="date" required />
+              </label>
+              <label>
+                <span>Origem</span>
+                <select name="source" required>
+                  <option>Salario HRC</option>
+                  <option>Salario HMJ</option>
+                  <option>Outra entrada</option>
+                </select>
+              </label>
+              <label>
+                <span>Valor</span>
+                <input name="amount" type="number" min="0.01" step="0.01" placeholder="0,00" required />
+              </label>
+            </div>
+            <label>
+              <span>Observacao</span>
+              <input name="description" placeholder="Plantao, adicional, reembolso..." />
+            </label>
+            <button type="submit">Adicionar entrada</button>
+          </form>
+        </div>
+
+        <section class="panel list-panel">
+          <div class="panel-title">
+            <h2>Movimentacoes recentes</h2>
+            <select id="movementFilter" aria-label="Filtrar movimentacoes">
+              <option value="all">Todas</option>
+              <option value="income">Entradas</option>
+              <option value="expense">Gastos</option>
+            </select>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Data</th>
+                  <th>Descricao</th>
+                  <th>Categoria</th>
+                  <th>Valor</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="movementRows"></tbody>
+            </table>
+          </div>
+        </section>
+      </section>
+
+      <section class="tab-panel" id="cartoes">
+        <div class="card-grid">
+          <form class="panel card-form" data-card="Itau">
+            <div class="panel-title">
+              <h2>Cartao Itau</h2>
+              <span class="pill">Credito</span>
+            </div>
+            <div class="field-grid">
+              <label><span>Data</span><input name="date" type="date" required /></label>
+              <label><span>Valor</span><input name="amount" type="number" min="0.01" step="0.01" required /></label>
+              <label>
+                <span>Grupo</span>
+                <select name="group" required>
+                  <option>Alimentacao</option>
+                  <option>Transporte</option>
+                  <option>Saude</option>
+                  <option>Educacao</option>
+                  <option>Lazer</option>
+                  <option>Compras</option>
+                  <option>Outros</option>
+                </select>
+              </label>
+            </div>
+            <label><span>Descricao</span><input name="description" placeholder="Compra lancada no Itau" required /></label>
+            <button type="submit">Lancar no Itau</button>
+          </form>
+
+          <form class="panel card-form" data-card="Bradesco">
+            <div class="panel-title">
+              <h2>Cartao Bradesco</h2>
+              <span class="pill">Credito</span>
+            </div>
+            <div class="field-grid">
+              <label><span>Data</span><input name="date" type="date" required /></label>
+              <label><span>Valor</span><input name="amount" type="number" min="0.01" step="0.01" required /></label>
+              <label>
+                <span>Grupo</span>
+                <select name="group" required>
+                  <option>Alimentacao</option>
+                  <option>Transporte</option>
+                  <option>Saude</option>
+                  <option>Educacao</option>
+                  <option>Lazer</option>
+                  <option>Compras</option>
+                  <option>Outros</option>
+                </select>
+              </label>
+            </div>
+            <label><span>Descricao</span><input name="description" placeholder="Compra lancada no Bradesco" required /></label>
+            <button type="submit">Lancar no Bradesco</button>
+          </form>
+
+          <form class="panel card-form" data-card="Sicoob">
+            <div class="panel-title">
+              <h2>Cartao Sicoob</h2>
+              <span class="pill">Credito</span>
+            </div>
+            <div class="field-grid">
+              <label><span>Data</span><input name="date" type="date" required /></label>
+              <label><span>Valor</span><input name="amount" type="number" min="0.01" step="0.01" required /></label>
+              <label>
+                <span>Grupo</span>
+                <select name="group" required>
+                  <option>Alimentacao</option>
+                  <option>Transporte</option>
+                  <option>Saude</option>
+                  <option>Educacao</option>
+                  <option>Lazer</option>
+                  <option>Compras</option>
+                  <option>Outros</option>
+                </select>
+              </label>
+            </div>
+            <label><span>Descricao</span><input name="description" placeholder="Compra lancada no Sicoob" required /></label>
+            <button type="submit">Lancar no Sicoob</button>
+          </form>
+        </div>
+
+        <section class="panel list-panel">
+          <div class="panel-title">
+            <h2>Resumo dos cartoes</h2>
+            <select id="cardFilter" aria-label="Filtrar cartao">
+              <option value="all">Todos</option>
+              <option value="Itau">Itau</option>
+              <option value="Bradesco">Bradesco</option>
+              <option value="Sicoob">Sicoob</option>
+            </select>
+          </div>
+          <div class="card-totals" id="cardTotals"></div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Data</th>
+                  <th>Cartao</th>
+                  <th>Descricao</th>
+                  <th>Grupo</th>
+                  <th>Valor</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="cardRows"></tbody>
+            </table>
+          </div>
+        </section>
+      </section>
+
+      <section class="tab-panel" id="analise">
+        <div class="analysis-grid">
+          <section class="panel upload-panel">
+            <div class="panel-title">
+              <h2>Analise de fatura ou extrato</h2>
+              <span class="pill">PDF</span>
+            </div>
+            <input id="statementFile" type="file" accept=".pdf,.csv,.txt,.ofx,.qif" />
+            <div class="upload-state" id="uploadState">Nenhum arquivo analisado.</div>
+            <button id="saveImportedBtn" type="button" disabled>Salvar itens importados</button>
+          </section>
+
+          <section class="panel insight-panel">
+            <div class="panel-title">
+              <h2>Para onde o dinheiro esta indo</h2>
+              <select id="analysisScope" aria-label="Origem da analise">
+                <option value="all">Lancamentos + upload</option>
+                <option value="manual">Lancamentos salvos</option>
+                <option value="imported">Ultimo upload</option>
+              </select>
+            </div>
+            <div class="bars" id="groupBars"></div>
+          </section>
+        </div>
+
+        <section class="panel list-panel">
+          <div class="panel-title">
+            <h2>Itens identificados</h2>
+            <span class="pill" id="importCount">0 itens</span>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Data</th>
+                  <th>Descricao</th>
+                  <th>Grupo</th>
+                  <th>Valor</th>
+                </tr>
+              </thead>
+              <tbody id="importRows"></tbody>
+            </table>
+          </div>
+        </section>
+      </section>
+
+      <section class="tab-panel" id="comparativo">
+        <section class="panel">
+          <div class="panel-title">
+            <h2>Comparacao dos meses</h2>
+            <span class="pill">Entradas x saidas</span>
+          </div>
+          <div class="comparison-bars" id="comparisonBars"></div>
+        </section>
+
+        <section class="panel list-panel">
+          <div class="panel-title">
+            <h2>Historico mensal</h2>
+            <span class="pill" id="comparisonCount">0 meses</span>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Mes</th>
+                  <th>Entradas</th>
+                  <th>Saidas</th>
+                  <th>Cartoes</th>
+                  <th>Total saidas</th>
+                  <th>Saldo</th>
+                </tr>
+              </thead>
+              <tbody id="comparisonRows"></tbody>
+            </table>
+          </div>
+        </section>
+      </section>
+    </main>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script src="script.js"></script>
+  </body>
+</html>
